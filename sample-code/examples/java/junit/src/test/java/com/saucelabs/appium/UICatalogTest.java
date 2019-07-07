@@ -1,52 +1,48 @@
 package com.saucelabs.appium;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import io.appium.java_client.AppiumDriver;
+import io.appium.java_client.MobileBy;
 import io.appium.java_client.MobileElement;
+import io.appium.java_client.TouchAction;
 import io.appium.java_client.ios.IOSDriver;
-
-import java.io.File;
-import java.net.URL;
-import java.util.List;
-
-import org.apache.commons.lang.RandomStringUtils;
+import io.appium.java_client.ios.IOSElement;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.openqa.selenium.Alert;
-import org.openqa.selenium.Dimension;
-import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.Point;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.*;
 import org.openqa.selenium.remote.Augmenter;
-import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
+
+import java.io.File;
+import java.net.URL;
+import java.time.Duration;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 /**
  * <a href="https://github.com/appium/appium">Appium</a> test which runs against a local Appium instance deployed
-  * with the 'UICatalog' iPhone project which is included in the Appium source distribution.
+ * with the 'UICatalog' iPhone project which is included in the Appium source distribution.
  *
  * @author Ross Rowe
+ *         <p>
+ *         Running below Test Cases on Simulator needs few steps as below
+ *         Unzip UICatalog.zip and build for simulator per below blog
+ *         http://samwize.com/2015/03/11/xcode-commands-to-build-app-and-run-on-simulator/
  */
+@SuppressWarnings("deprecation")
 public class UICatalogTest {
 
-    private AppiumDriver driver;
+    private AppiumDriver<IOSElement> driver;
 
     private WebElement row;
 
@@ -54,15 +50,13 @@ public class UICatalogTest {
     public void setUp() throws Exception {
         // set up appium
         File classpathRoot = new File(System.getProperty("user.dir"));
-        File appDir = new File(classpathRoot, "../../../apps/UICatalog/build/Release-iphonesimulator");
+        File appDir = new File(classpathRoot, "../../../apps/UICatalog/build/release-iphonesimulator");
         File app = new File(appDir, "UICatalog.app");
         DesiredCapabilities capabilities = new DesiredCapabilities();
-        capabilities.setCapability(CapabilityType.BROWSER_NAME, "");
-        capabilities.setCapability("platformVersion", "7.1");
-        capabilities.setCapability("platformName", "iOS");
-        capabilities.setCapability("deviceName", "iPhone Simulator");
+        capabilities.setCapability("platformVersion", "11.0");
+        capabilities.setCapability("deviceName", "iPhone 7");
         capabilities.setCapability("app", app.getAbsolutePath());
-        driver = new IOSDriver(new URL("http://127.0.0.1:4723/wd/hub"), capabilities);
+        driver = new IOSDriver<>(new URL("http://127.0.0.1:4723/wd/hub"), capabilities);
     }
 
     @After
@@ -72,28 +66,28 @@ public class UICatalogTest {
 
     private void openMenuPosition(int index) {
         //populate text fields with two random number
-        MobileElement table = (MobileElement)driver.findElementByClassName("UIATableView");
+        MobileElement table = (MobileElement) driver.findElementByClassName("UIATableView");
         row = table.findElementsByClassName("UIATableCell").get(index);
         row.click();
     }
 
     private Point getCenter(WebElement element) {
 
-      Point upperLeft = element.getLocation();
-      Dimension dimensions = element.getSize();
-      return new Point(upperLeft.getX() + dimensions.getWidth()/2, upperLeft.getY() + dimensions.getHeight()/2);
+        Point upperLeft = element.getLocation();
+        Dimension dimensions = element.getSize();
+        return new Point(upperLeft.getX() + dimensions.getWidth() / 2, upperLeft.getY() + dimensions.getHeight() / 2);
     }
 
     @Test
     public void testFindElement() throws Exception {
         //first view in UICatalog is a table
-        MobileElement table = (MobileElement)driver.findElementByClassName("UIATableView");
+        IOSElement table = driver.findElementByClassName("UIATableView");
         assertNotNull(table);
         //is number of cells/rows inside table correct
-        List<WebElement> rows = table.findElementsByClassName("UIATableCell");
-        assertEquals(12, rows.size());
+        List<MobileElement> rows = table.findElementsByClassName("UIATableCell");
+        assertEquals(18, rows.size());
         //is first one about buttons
-        assertEquals("Buttons, Various uses of UIButton", rows.get(0).getAttribute("name"));
+        assertEquals("Action Sheets", rows.get(0).getAttribute("name"));
         //navigationBar is not inside table
         WebElement nav_bar = null;
         try {
@@ -130,79 +124,67 @@ public class UICatalogTest {
     }
 
     @Test
-    public void testTextFieldEdit() {
-        //go to the text fields section
-        openMenuPosition(2);
-        WebElement text_field = driver.findElementsByClassName("UIATextField").get(0);
-        //get default/empty text
-        String default_val = text_field.getAttribute("value");
-        //write some random text to element
-        String rnd_string = RandomStringUtils.randomAlphanumeric(6);
-        text_field.sendKeys(rnd_string);
-        assertEquals(rnd_string, text_field.getAttribute("value"));
-        //send some random keys
-        String rnd_string2 = RandomStringUtils.randomAlphanumeric(6);
-        Actions swipe = new Actions(driver).sendKeys(rnd_string2);
-        swipe.perform();
-        //check if text is there
-        assertEquals(rnd_string + rnd_string2, text_field.getAttribute("value"));
-        //clear
-        text_field.clear();
-        //check if is empty/has default text
-        assertEquals(default_val, text_field.getAttribute("value"));
-    }
-
-    @Test
     public void testAlertInteraction() {
         //go to the alerts section
-        openMenuPosition(10);
+        openMenuPosition(2);
 
         //trigger modal alert with cancel & ok buttons
-        List<WebElement> triggerOkCancel = driver.findElementsByAccessibilityId("Show OK-Cancel");
-        triggerOkCancel.get(1).click();
+        List<IOSElement> triggerOkCancel = driver.findElementsByXPath("//UIATableCell[2]/UIAStaticText[1]");
+        triggerOkCancel.get(0).click();
         Alert alert = driver.switchTo().alert();
         //check if title of alert is correct
-        assertEquals("UIAlertView <Alert message>", alert.getText());
+        assertEquals("A Short Title Is Best A message should be a short, complete sentence.", alert.getText());
         alert.accept();
     }
 
     @Test
-    public void testScroll() {
-        //scroll menu
-        //get initial third row location
-        row = driver.findElementsByClassName("UIATableCell").get(2);
-        Point location1 = row.getLocation();
-        Point center = getCenter(row);
-        //perform swipe gesture
-        driver.swipe(center.getX(), center.getY(), center.getX(), center.getY()-20, 1);
-        //get new row coordinates
-        Point location2 = row.getLocation();
-        assertEquals(location1.getX(), location2.getX());
-        assertNotSame(location1.getY(), location2.getY());
+    public void scrollByDriver() {
+        MobileElement slider = driver
+                .findElement(MobileBy
+                        .IosUIAutomation(".tableViews()[0]"
+                                + ".scrollToElementWithPredicate(\"name CONTAINS 'Slider'\")"));
+        assertEquals(slider.getAttribute("name"), "Sliders");
+    }
+
+    @Test
+    public void scrollByElement() {
+        MobileElement table = driver.findElement(MobileBy
+                .IosUIAutomation(".tableViews()[0]"));
+        MobileElement slider = table.findElement(MobileBy
+                .IosUIAutomation(".scrollToElementWithPredicate(\"name CONTAINS 'Slider'\")"));
+        assertEquals(slider.getAttribute("name"), "Sliders");
     }
 
     @Test
     public void testSlider() {
-      //go to controls
-      openMenuPosition(1);
-      //get the slider
-      WebElement slider = driver.findElementByClassName("UIASlider");
-      assertEquals("50%", slider.getAttribute("value"));
-      Point sliderLocation = getCenter(slider);
-      driver.swipe(sliderLocation.getX(), sliderLocation.getY(), sliderLocation.getX()-100, sliderLocation.getY(), 1);
-      assertEquals("0%", slider.getAttribute("value"));
+        //go to controls
+        openMenuPosition(10);
+        //get the slider
+        WebElement slider = driver.findElementByClassName("UIASlider");
+        assertEquals("42%", slider.getAttribute("value"));
+        Dimension size = slider.getSize();
+
+        TouchAction swipe = new TouchAction(driver).press(slider, 0, size.height / 2)
+                .waitAction(Duration.ofSeconds(2))
+                .moveTo(slider, size.width / 2, size.height / 2).release();
+        swipe.perform();
+        assertEquals("0%", slider.getAttribute("value"));
     }
 
     @Test
     public void testSessions() throws Exception {
-      HttpGet request = new HttpGet("http://localhost:4723/wd/hub/sessions");
-      HttpClient httpClient = new DefaultHttpClient();
-      HttpResponse response = httpClient.execute(request);
-      HttpEntity entity = response.getEntity();
-      JSONObject jsonObject = (JSONObject) new JSONParser().parse(EntityUtils.toString(entity));
+        HttpGet request = new HttpGet("http://localhost:4723/wd/hub/sessions");
+        @SuppressWarnings("resource")
+        HttpClient httpClient = new DefaultHttpClient();
+        HttpResponse response = httpClient.execute(request);
+        HttpEntity entity = response.getEntity();
+        JSONObject jsonObject = (JSONObject) new JSONParser().parse(EntityUtils.toString(entity));
 
-      String sessionId = driver.getSessionId().toString();
-      assertEquals(jsonObject.get("sessionId"), sessionId);
+        JSONArray lang = (JSONArray) jsonObject.get("value");
+        JSONObject innerObj = (JSONObject) lang.iterator().next();
+
+        String sessionId = driver.getSessionId().toString();
+        assertEquals(innerObj.get("id"), sessionId);
     }
 
     @Test
@@ -218,13 +200,13 @@ public class UICatalogTest {
         //get main view soruce
         String source_main = driver.getPageSource();
         assertTrue(source_main.contains("UIATableView"));
-        assertTrue(source_main.contains("TextFields, Uses of UITextField"));
+        assertTrue(source_main.contains("Text Fields"));
 
         //got to text fields section
-        openMenuPosition(2);
+        openMenuPosition(13);
         String source_textfields = driver.getPageSource();
-        assertTrue(source_textfields.contains("UIAStaticText"));
-        assertTrue(source_textfields.contains("TextFields"));
+        //assertTrue(source_textfields.contains("UIAStaticText"));
+        assertTrue(source_textfields.contains("UIATextField"));
 
         assertNotSame(source_main, source_textfields);
     }

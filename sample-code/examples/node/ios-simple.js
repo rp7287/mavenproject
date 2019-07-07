@@ -13,14 +13,14 @@ describe("ios simple", function () {
   var allPassed = true;
 
   before(function () {
-    var serverConfig = process.env.SAUCE ?
+    var serverConfig = process.env.npm_package_config_sauce ?
       serverConfigs.sauce : serverConfigs.local;
     driver = wd.promiseChainRemote(serverConfig);
     require("./helpers/logging").configure(driver);
 
-    var desired = _.clone(require("./helpers/caps").ios81);
+    var desired = _.clone(require("./helpers/caps").ios92);
     desired.app = require("./helpers/apps").iosTestApp;
-    if (process.env.SAUCE) {
+    if (process.env.npm_package_config_sauce) {
       desired.name = 'ios - simple';
       desired.tags = ['sample'];
     }
@@ -31,7 +31,7 @@ describe("ios simple", function () {
     return driver
       .quit()
       .finally(function () {
-        if (process.env.SAUCE) {
+        if (process.env.npm_package_config_sauce) {
           return driver.sauceJobStatus(allPassed);
         }
       });
@@ -42,13 +42,13 @@ describe("ios simple", function () {
   });
 
   function populate() {
-    var seq = _(['IntegerA', 'IntegerB']).map(function (name) {
+    var seq = _(['IntegerA', 'IntegerB']).map(function (id) {
       return function (sum) {
-        return driver.waitForElementByName(name, 3000).then(function (el) {
+        return driver.waitForElementById(id, 3000).then(function (el) {
           var x = _.random(0,10);
           sum += x;
           return el.type('' + x).then(function () { return sum; })
-            .elementByName('Done').click().sleep(1000); // dismissing keyboard
+            .elementById('Done').click().sleep(1000); // dismissing keyboard
         }).then(function () { return sum; });
       };
     });
@@ -61,7 +61,7 @@ describe("ios simple", function () {
         return driver.
           elementByAccessibilityId('ComputeSumButton')
             .click().sleep(1000)
-          .elementByIosUIAutomation('.elements().withName("Answer");')
+          .elementByAccessibilityId('Answer')
             .text().should.become("" + sum);
       });
   });

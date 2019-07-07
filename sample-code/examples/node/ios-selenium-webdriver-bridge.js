@@ -33,9 +33,9 @@ describe("ios selenium webdriver bridge", function () {
       caps.set(key, val);
     });
     caps.set('app', require("./helpers/apps").iosTestApp);
-    if (process.env.SAUCE) {
-      caps.set('username', process.env.SAUCE_USERNAME);
-      caps.set('accessKey', process.env.SAUCE_ACCESS_KEY);
+    if (process.env.npm_package_config_sauce) {
+      caps.set('username', process.env.npm_package_config_sauce_username);
+      caps.set('accessKey', process.env.npm_package_config_sauce_access_key);
       caps.set('name', 'ios - selenium-webdriver bridge');
       caps.set('tags', ['sample']);
       builder = new webdriver.Builder()
@@ -46,6 +46,7 @@ describe("ios selenium webdriver bridge", function () {
         .usingServer('http://localhost:4723/wd/hub')
         .withCapabilities(caps);
     }
+
     driver = builder.build();
     return wdBridge
       .initFromSeleniumWebdriver(builder, driver)
@@ -59,7 +60,7 @@ describe("ios selenium webdriver bridge", function () {
     return new Q(driver
       .quit())
       .finally(function () {
-        if (process.env.SAUCE) {
+        if (process.env.npm_package_config_sauce) {
           return wdDriver.sauceJobStatus(allPassed);
         }
       });
@@ -101,7 +102,7 @@ describe("ios selenium webdriver bridge", function () {
             .click().sleep(1000);
       }).then(function () {
         return wdDriver
-          .elementByIosUIAutomation('elements().withName("Answer");')
+          .elementByName('Answer')
           .then(function (el) {
             // converting from wd el
             return wdDriver.swEl(el).getText();

@@ -12,11 +12,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 public class AndroidWebViewTest {
-    private AppiumDriver driver;
+    private AppiumDriver<WebElement> driver;
 
     @Before
     public void setUp() throws Exception {
@@ -24,13 +23,12 @@ public class AndroidWebViewTest {
         File classpathRoot = new File(System.getProperty("user.dir"));
         File app = new File(classpathRoot, "../../../apps/selendroid-test-app.apk");
         DesiredCapabilities capabilities = new DesiredCapabilities();
-        capabilities.setCapability(CapabilityType.BROWSER_NAME, "");
+        capabilities.setCapability("deviceName","Android Emulator");
         capabilities.setCapability("automationName","Selendroid");
-        capabilities.setCapability("platformName", "Android");
         capabilities.setCapability("app", app.getAbsolutePath());
         capabilities.setCapability("appPackage", "io.selendroid.testapp");
         capabilities.setCapability("appActivity", ".HomeScreenActivity");
-        driver = new AndroidDriver(new URL("http://127.0.0.1:4723/wd/hub"), capabilities);
+        driver = new AndroidDriver<WebElement>(new URL("http://127.0.0.1:4723/wd/hub"), capabilities);
     }
     @After
     public void tearDown() throws Exception {

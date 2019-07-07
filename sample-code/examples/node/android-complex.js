@@ -17,16 +17,16 @@ describe("android complex", function () {
   var allPassed = true;
 
   before(function () {
-    var serverConfig = process.env.SAUCE ?
+    var serverConfig = process.env.npm_package_config_sauce ?
       serverConfigs.sauce : serverConfigs.local;
     driver = wd.promiseChainRemote(serverConfig);
     require("./helpers/logging").configure(driver);
 
-    var desired = process.env.SAUCE ?
+    var desired = process.env.npm_package_config_sauce ?
       _.clone(require("./helpers/caps").android18) :
       _.clone(require("./helpers/caps").android19);
     desired.app = require("./helpers/apps").androidApiDemos;
-    if (process.env.SAUCE) {
+    if (process.env.npm_package_config_sauce) {
       desired.name = 'android - complex';
       desired.tags = ['sample'];
     }
@@ -39,7 +39,7 @@ describe("android complex", function () {
     return driver
       .quit()
       .finally(function () {
-        if (process.env.SAUCE) {
+        if (process.env.npm_package_config_sauce) {
           return driver.sauceJobStatus(allPassed);
         }
       });
@@ -57,10 +57,10 @@ describe("android complex", function () {
       .elementsByXPath('//android.widget.TextView[contains(@text, "Animat")]')
         .then(_p.filterDisplayed).first()
       .then(function (el) {
-        if (!process.env.SAUCE) {
+        if (!process.env.npm_package_config_sauce) {
           return el.text().should.become('Animation');
         }
-      }).elementByName('App').click()
+        }).elementByXPath('//android.widget.TextView[@text=\'App\']').click()
         .sleep(3000)
       .elementsByAndroidUIAutomator('new UiSelector().clickable(true)')
         .should.eventually.have.length.above(10)
@@ -106,14 +106,14 @@ describe("android complex", function () {
               duration: 800
             });
           });
-        }).elementByName('Touch Paint')
+        }).elementByXPath('//android.widget.TextView[@text=\'Touch Paint\']')
         .catch(function () {
           return findTouchPaint();
         });
     }
 
     return driver
-      .elementByName('Graphics').click()
+      .elementByXPath('//android.widget.TextView[@text=\'Graphics\']').click()
       .then(findTouchPaint)
       .click()
       .sleep(5000)

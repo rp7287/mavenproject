@@ -7,6 +7,5 @@ exports.local = {
 exports.sauce = {
   host: 'ondemand.saucelabs.com',
   port: 80,
-  username: process.env.SAUCE_USERNAME,
-  password: process.env.SAUCE_ACCESS_KEY
+  auth: process.env.npm_package_config_username + ":" + process.env.npm_package_config_key
 };

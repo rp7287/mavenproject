@@ -31,23 +31,25 @@
 require 'rubygems'
 require 'appium_lib'
 
-APP_PATH = '../../apps/TestApp/build/release-iphonesimulator/TestApp.app'
+APP_PATH = '../../apps/TestApp/build/release-iphonesimulator/TestApp-iphonesimulator.app'
 
 desired_caps = {
-  caps:       {
+  caps: {
     platformName:  'iOS',
-    versionNumber: '7.1',
-    deviceName:    'iPhone Simulator',
+    platformVersion: '10.3',
+    deviceName:    'iPhone 6',
     app:           APP_PATH,
+    automationName: 'XCUITest',
   },
   appium_lib: {
     sauce_username:   nil, # don't run on Sauce
-    sauce_access_key: nil
+    sauce_access_key: nil,
+    wait: 60
   }
 }
 
 # Start the driver
-Appium::Driver.new(desired_caps).start_driver
+Appium::Driver.new(desired_caps, true).start_driver
 
 module Calculator
   module IOS
@@ -81,13 +83,13 @@ module Calculator
     wait { text 'this alert is so cool' }
 
     # Or by find
-    find('Cancel').click
+    find_exact('Cancel').click
 
     # Waits until alert doesn't exist
     wait_true { !exists { tag('UIAAlert') } }
 
     # Alerts can be switched into
-    button('show alert').click # Get a button by its text
+    wait { button('show alert').click } # Get a button by its text
     alert         = driver.switch_to.alert # Get the text of the current alert, using
     # the Selenium::WebDriver directly
     alerting_text = alert.text
@@ -96,8 +98,8 @@ module Calculator
 
     # Window Size is easy to get
     sizes = window_size
-    raise Exception unless sizes.height == 568
-    raise Exception unless sizes.width == 320
+    raise Exception unless sizes.height == 667
+    raise Exception unless sizes.width == 375
 
     # Quit when you're done!
     driver_quit

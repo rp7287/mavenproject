@@ -18,8 +18,11 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
+
 import org.json.simple.JSONObject;
+import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +31,6 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 /**
@@ -37,9 +39,10 @@ import org.openqa.selenium.remote.DesiredCapabilities;
  *
  * @author Ross Rowe
  */
+@SuppressWarnings("deprecation")
 public class SimpleTest {
 
-    private AppiumDriver driver;
+    private AppiumDriver<WebElement> driver;
 
     private List<Integer> values;
 
@@ -49,15 +52,13 @@ public class SimpleTest {
     @Before
     public void setUp() throws Exception {
         // set up appium
-        File appDir = new File(System.getProperty("user.dir"), "../../../apps/TestApp/build/Release-iphonesimulator");
+        File appDir = new File(System.getProperty("user.dir"), "../../../apps/TestApp/build/release-iphonesimulator");
         File app = new File(appDir, "TestApp.app");
         DesiredCapabilities capabilities = new DesiredCapabilities();
-        capabilities.setCapability(CapabilityType.BROWSER_NAME, "");
-        capabilities.setCapability("platformVersion", "7.1");
-        capabilities.setCapability("platformName", "iOS");
-        capabilities.setCapability("deviceName", "iPhone Simulator");
+        capabilities.setCapability("platformVersion", "9.3");
+        capabilities.setCapability("deviceName", "iPhone 6");
         capabilities.setCapability("app", app.getAbsolutePath());
-        driver = new IOSDriver(new URL("http://127.0.0.1:4723/wd/hub"), capabilities);
+        driver = new IOSDriver<WebElement>(new URL("http://127.0.0.1:4723/wd/hub"), capabilities);
         values = new ArrayList<Integer>();
     }
 
@@ -118,7 +119,7 @@ public class SimpleTest {
     @Test
     public void testBasicButton() throws Exception {
         WebElement button = driver.findElement(By.xpath("//UIAButton[1]"));
-        assertEquals("ComputeSumButton", button.getText());
+        assertEquals("Compute Sum", button.getText());
     }
 
     @Test
@@ -170,30 +171,21 @@ public class SimpleTest {
       assertEquals(String.valueOf(number), sumLabel.getText());
     }
 
+    //Fix for Simulator https://github.com/appium/appium/issues/6315
     @Test
     public void testAttribute() throws Exception {
-        Random random = new Random();
+    	Random random = new Random();
 
         WebElement text = driver.findElement(By.xpath("//UIATextField[1]"));
 
         int number = random.nextInt(MAXIMUM - MINIMUM + 1) + MINIMUM;
         text.sendKeys(String.valueOf(number));
 
-        assertEquals("TextField1", text.getAttribute("name"));
+        assertEquals("IntegerA", text.getAttribute("name"));
         assertEquals("TextField1", text.getAttribute("label"));
         assertEquals(String.valueOf(number), text.getAttribute("value"));
     }
 
-    @Test
-    public void testSlider() throws Exception {
-        //get the slider
-        WebElement slider = driver.findElement(By.xpath("//UIASlider[1]"));
-        assertEquals("50%", slider.getAttribute("value"));
-        Point sliderLocation = getCenter(slider);
-        driver.swipe(sliderLocation.getX(), sliderLocation.getY(), sliderLocation.getX()-100, sliderLocation.getY(), 1000);
-
-        assertEquals("0%", slider.getAttribute("value"));
-    }
 
     @Test
     public void testLocation() throws Exception {
@@ -201,20 +193,26 @@ public class SimpleTest {
 
         Point location = button.getLocation();
 
-        assertEquals(94, location.getX());
-        assertEquals(122, location.getY());
+        assertEquals(110, location.getX());
+        assertEquals(143, location.getY());
     }
 
+    //https://jsonformatter.curiousconcept.com/
+    
     @Test
     public void testSessions() throws Exception {
         HttpGet request = new HttpGet("http://localhost:4723/wd/hub/sessions");
-        HttpClient httpClient = new DefaultHttpClient();
+        @SuppressWarnings("resource")
+		HttpClient httpClient = new DefaultHttpClient();
         HttpResponse response = httpClient.execute(request);
         HttpEntity entity = response.getEntity();
+        
         JSONObject jsonObject = (JSONObject) new JSONParser().parse(EntityUtils.toString(entity));
-
+        JSONArray lang= (JSONArray) jsonObject.get("value");
+        JSONObject innerObj = (JSONObject) lang.iterator().next();
+        
         String sessionId = driver.getSessionId().toString();
-        assertEquals(jsonObject.get("sessionId"), sessionId);
+        assertEquals(innerObj.get("id"), sessionId);
     }
 
     @Test

@@ -12,14 +12,14 @@ describe("ios webview", function () {
   var allPassed = true;
 
   before(function () {
-    var serverConfig = process.env.SAUCE ?
+    var serverConfig = process.env.npm_package_config_sauce ?
       serverConfigs.sauce : serverConfigs.local;
     driver = wd.promiseChainRemote(serverConfig);
     require("./helpers/logging").configure(driver);
 
     var desired = _.clone(require("./helpers/caps").ios81);
     desired.app = require("./helpers/apps").iosWebviewApp;
-    if (process.env.SAUCE) {
+    if (process.env.npm_package_config_sauce) {
       desired.name = 'ios - webview';
       desired.tags = ['sample'];
     }
@@ -30,7 +30,7 @@ describe("ios webview", function () {
     return driver
       .quit()
       .finally(function () {
-        if (process.env.SAUCE) {
+        if (process.env.npm_package_config_sauce) {
           return driver.sauceJobStatus(allPassed);
         }
       });
@@ -44,9 +44,12 @@ describe("ios webview", function () {
   it("should get the url", function () {
     return driver
       .elementByXPath('//UIATextField[@value=\'Enter URL\']')
-        .sendKeys('https://www.google.com')
+        .sendKeys('www.google.com')
       .elementByName('Go').click()
+      .sleep(20000)
+      .source().then(console.log)
       .elementByClassName('UIAWebView').click() // dismissing keyboard
+      .sleep(10000)
       .context('WEBVIEW')
       .sleep(1000)
       .waitForElementByName('q', 5000)

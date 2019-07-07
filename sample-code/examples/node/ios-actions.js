@@ -20,15 +20,15 @@ describe("ios actions", function () {
   var driver;
   var allPassed = true;
 
-  before(function () {
-    var serverConfig = process.env.SAUCE ?
+  beforeEach(function () {
+    var serverConfig = process.env.npm_package_config_sauce ?
       serverConfigs.sauce : serverConfigs.local;
     driver = wd.promiseChainRemote(serverConfig);
     require("./helpers/logging").configure(driver);
 
     var desired = _.clone(require("./helpers/caps").ios81);
     desired.app = require("./helpers/apps").iosTestApp;
-    if (process.env.SAUCE) {
+    if (process.env.npm_package_config_sauce) {
       desired.name = 'ios - actions';
       desired.tags = ['sample'];
     }
@@ -39,7 +39,7 @@ describe("ios actions", function () {
     return driver
       .quit()
       .finally(function () {
-        if (process.env.SAUCE) {
+        if (process.env.npm_package_config_sauce) {
           return driver.sauceJobStatus(allPassed);
         }
       });
@@ -55,21 +55,20 @@ describe("ios actions", function () {
       .then(function (el) {
         var action = new wd.TouchAction(driver);
         action
-          .tap({el: el, x: 10, y: 10})
-          .release();
+          .tap({el: el, x: 10, y: 10});
         return driver.performTouchAction(action);
       })
       .elementByAccessibilityId('ComputeSumButton')
       .then(function (el) {
         var action = new wd.TouchAction(driver);
         action
-          .tap({el: el, x: 10, y: 10})
-          .release();
+          .tap({el: el, x: 10, y: 10});
         return action.perform();
       });
   });
 
-  it("should execute a multi action", function () {
+  // TODO: MultiAction not yet implemented. Re-enable this test when they are.
+  xit("should execute a multi action", function () {
     return driver.chain()
       .then(function () {
         return driver
@@ -106,59 +105,61 @@ describe("ios actions", function () {
   it("should swipe", function () {
     return driver
       .waitForElementByName('Test Gesture', 5000).click()
-      .sleep(1000)
-      .elementByName('OK').click()
-      .sleep(1000)
-      .elementByXPath('//UIAMapView').getLocation()
+      .sleep(3000)
+      .elementByName('Allow').click()
+      .sleep(3000)
+      .elementByXPath('//XCUIElementTypeMap').getLocation()
       .then(function (loc) {
         return driver.swipe({ startX: loc.x, startY: loc.y,
           endX: 0.5,  endY: loc.y, duration: 800 });
       });
   });
 
-  it("should pinch", function () {
+  // TODO: MultiAction not yet implemented. Re-enable this test when they are.
+  xit("should pinch", function () {
     return driver
       .waitForElementByName('Test Gesture', 5000).click()
-      .sleep(1000)
-      .elementByName('OK').click()
-      .sleep(1000)
-      .elementByXPath('//UIAMapView')
+      .sleep(3000)
+      .elementByName('Allow').click()
+      .sleep(3000)
+      .elementByXPath('//XCUIElementTypeMap')
       .then(function (el) {
         return driver.pinch(el);
       });
   });
 
-  it("should pinch el", function () {
+  // TODO: MultiAction not yet implemented. Re-enable this test when they are.
+  xit("should pinch el", function () {
     return driver
       .waitForElementByName('Test Gesture', 5000).click()
+      .sleep(2000)
+      .elementByName('Allow').click()
       .sleep(1000)
-      .elementByName('OK').click()
-      .sleep(1000)
-      .elementByXPath('//UIAMapView')
+      .elementByXPath('//XCUIElementTypeMap')
       .then(function (el) {
         return el.pinch();
       });
   });
 
-  it("should zoom", function () {
+  xit("should zoom", function () {
     return driver
       .waitForElementByName('Test Gesture', 5000).click()
-      .sleep(1000)
-      .elementByName('OK').click()
-      .sleep(1000)
-      .elementByXPath('//UIAMapView')
+      .sleep(3000)
+      .elementByName('Allow').click()
+      .sleep(3000)
+      .elementByXPath('//XCUIElementTypeMap')
       .then(function (el) {
         return driver.zoom(el);
       });
   });
 
-  it("should zoom el", function () {
+  xit("should zoom el", function () {
     return driver
       .waitForElementByName('Test Gesture', 5000).click()
+      .sleep(3000)
+      .elementByName('Allow').click()
       .sleep(1000)
-      .elementByName('OK').click()
-      .sleep(1000)
-      .elementByXPath('//UIAMapView')
+      .elementByXPath('//XCUIElementTypeMap')
       .then(function (el) {
         return el.zoom();
       });

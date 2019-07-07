@@ -15,9 +15,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
-import org.openqa.selenium.remote.RemoteWebDriver;
 
 import com.saucelabs.common.SauceOnDemandAuthentication;
 import com.saucelabs.common.SauceOnDemandSessionIdProvider;
@@ -39,7 +37,7 @@ import com.saucelabs.junit.SauceOnDemandTestWatcher;
  */
 public class SauceTest implements SauceOnDemandSessionIdProvider {
 
-    private AppiumDriver driver;
+    private AppiumDriver<WebElement> driver;
 
     private List<Integer> values;
 
@@ -71,14 +69,12 @@ public class SauceTest implements SauceOnDemandSessionIdProvider {
         String sauceUserName = authentication.getUsername();
         String sauceAccessKey = authentication.getAccessKey();
         DesiredCapabilities capabilities = new DesiredCapabilities();
-        capabilities.setCapability(CapabilityType.BROWSER_NAME, "");
-        capabilities.setCapability("platformVersion", "7.1");
-        capabilities.setCapability("deviceName", "iPhone Simulator");
-        capabilities.setCapability("platformName", "iOS");
+        capabilities.setCapability("platformVersion", "9.3");
+        capabilities.setCapability("deviceName", "iPhone 6");
         capabilities.setCapability("appiumVersion", "1.3.4");
         capabilities.setCapability("app", "https://appium.s3.amazonaws.com/TestApp7.1.app.zip");
 
-        driver = new IOSDriver(new URL(MessageFormat.format("http://{0}:{1}@ondemand.saucelabs.com:80/wd/hub", sauceUserName, sauceAccessKey)),
+        driver = new IOSDriver<WebElement>(new URL(MessageFormat.format("http://{0}:{1}@ondemand.saucelabs.com:80/wd/hub", sauceUserName, sauceAccessKey)),
                 capabilities);
         this.sessionId = driver.getSessionId().toString();
         values = new ArrayList<Integer>();
